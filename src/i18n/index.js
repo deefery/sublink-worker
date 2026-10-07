@@ -133,6 +133,10 @@ export const translations = {
       'GLOBAL': 'GLOBAL'
     },
     generalSettings: '通用设置',
+    forceClashProvider: 'Clash Provider 直连',
+    forceClashProviderTip: '用于会拦截 Cloudflare Worker 的订阅。每行一个 HTTP(S) 订阅地址；这些地址不会由 Worker 抓取，而会写入 Clash/Mihomo proxy-providers 让客户端直接更新。若地址也在“输入源”里，会自动跳过 Worker 抓取。',
+    forceClashProviderPlaceholder: '每行一个订阅地址，例如：https://example.com/sub/token',
+    forceClashProviderUA: 'Provider User-Agent',
     groupByCountry: '按国家分组',
     groupByCountryTip: '仅 Clash/Surge/SingBox 生效',
     includeAutoSelect: '包含自动选择分组',
@@ -295,6 +299,10 @@ export const translations = {
       'GLOBAL': 'GLOBAL'
     },
     generalSettings: 'General Settings',
+    forceClashProvider: 'Direct Clash Provider',
+    forceClashProviderTip: 'For subscriptions that block Cloudflare Workers. Enter one HTTP(S) URL per line; the Worker will not fetch them and Clash/Mihomo will update them directly through proxy-providers. Matching URLs in the main input are skipped automatically.',
+    forceClashProviderPlaceholder: 'One subscription URL per line, e.g. https://example.com/sub/token',
+    forceClashProviderUA: 'Provider User-Agent',
     groupByCountry: 'Group by Country',
     groupByCountryTip: 'Clash/Surge/SingBox only',
     includeAutoSelect: 'Include Auto Select Group',
@@ -451,6 +459,10 @@ export const translations = {
       'GLOBAL': 'GLOBAL'
     },
     generalSettings: 'تنظیمات عمومی',
+    forceClashProvider: 'Direct Clash Provider',
+    forceClashProviderTip: 'For subscriptions that block Cloudflare Workers. The client fetches these URLs directly through Clash/Mihomo proxy-providers.',
+    forceClashProviderPlaceholder: 'One HTTP(S) subscription URL per line',
+    forceClashProviderUA: 'Provider User-Agent',
     groupByCountry: 'گروه‌بندی بر اساس کشور',
     groupByCountryTip: 'فقط Clash/Surge/SingBox',
     includeAutoSelect: 'شامل گروه انتخاب خودکار',
@@ -607,6 +619,10 @@ export const translations = {
       'GLOBAL': 'GLOBAL'
     },
     generalSettings: 'Общие настройки',
+    forceClashProvider: 'Прямой Clash Provider',
+    forceClashProviderTip: 'Для подписок, блокирующих Cloudflare Workers. Clash/Mihomo будет загружать эти URL напрямую через proxy-providers.',
+    forceClashProviderPlaceholder: 'Один HTTP(S) URL подписки на строку',
+    forceClashProviderUA: 'User-Agent провайдера',
     groupByCountry: 'Группировать по странам',
     groupByCountryTip: 'Только для Clash/Surge/SingBox',
     includeAutoSelect: 'Включить группу автовыбора',

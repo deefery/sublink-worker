@@ -1,7 +1,32 @@
 import { decodeBase64 } from '../../utils.js';
 import { parseSubscriptionContent } from './subscriptionContentParser.js';
+import { UpstreamBlockedError } from '../../services/errors.js';
 
 const SUBSCRIPTION_URI_PATTERN = /^(ss|vmess|vless|hysteria|hysteria2|hy2|trojan|tuic|anytls|http|https):\/\//i;
+
+function isCloudflareChallenge(response, text) {
+    const body = typeof text === 'string' ? text.toLowerCase() : '';
+    const server = response?.headers?.get?.('server')?.toLowerCase() || '';
+    const mitigated = response?.headers?.get?.('cf-mitigated')?.toLowerCase() || '';
+    const challengeBody = body.includes('just a moment') ||
+        body.includes('/cdn-cgi/challenge-platform') ||
+        body.includes('error code: 1010');
+    return mitigated === 'challenge' || (server.includes('cloudflare') && challengeBody);
+}
+
+async function readSubscriptionResponse(response, url) {
+    const text = await response.text();
+    if (isCloudflareChallenge(response, text)) {
+        throw new UpstreamBlockedError(
+            `Upstream subscription ${url} is blocked by a Cloudflare challenge. ` +
+            'For Clash/Mihomo, move this URL to "Force Provider" so the client fetches it directly.'
+        );
+    }
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return text;
+}
 
 function hasSubscriptionUriLine(content) {
     return content
@@ -132,14 +157,14 @@ export async function fetchSubscription(url, userAgent) {
             method: 'GET',
             headers: headers
         });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const text = await response.text();
+        const text = await readSubscriptionResponse(response, url);
         const decodedText = decodeContent(text);
 
         return parseSubscriptionContent(decodedText);
     } catch (error) {
+        if (error instanceof UpstreamBlockedError) {
+            throw error;
+        }
         console.error('Error fetching or parsing HTTP(S) content:', error);
         return null;
     }
@@ -161,10 +186,7 @@ export async function fetchSubscriptionWithFormat(url, userAgent) {
             method: 'GET',
             headers: headers
         });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const text = await response.text();
+        const text = await readSubscriptionResponse(response, url);
         const content = decodeContent(text);
         const format = detectFormat(content);
 
@@ -172,6 +194,9 @@ export async function fetchSubscriptionWithFormat(url, userAgent) {
 
         return { content, format, url, subscriptionUserinfo };
     } catch (error) {
+        if (error instanceof UpstreamBlockedError) {
+            throw error;
+        }
         console.error('Error fetching subscription:', error);
         return null;
     }

@@ -88,6 +88,8 @@ export const formLogicFn = (t) => {
             enableClashUI: false,
             externalController: '',
             externalUiDownloadUrl: '',
+            forceClashProviders: '',
+            forceClashProviderUA: 'Clash.Meta',
             configType: 'singbox',
             configEditor: '',
             savingConfig: false,
@@ -135,6 +137,8 @@ export const formLogicFn = (t) => {
                 this.enableClashUI = localStorage.getItem('enableClashUI') === 'true';
                 this.externalController = localStorage.getItem('externalController') || '';
                 this.externalUiDownloadUrl = localStorage.getItem('externalUiDownloadUrl') || '';
+                this.forceClashProviders = localStorage.getItem('forceClashProviders') || '';
+                this.forceClashProviderUA = localStorage.getItem('forceClashProviderUA') || 'Clash.Meta';
                 this.customUA = localStorage.getItem('userAgent') || '';
                 this.configEditor = localStorage.getItem('configEditor') || '';
                 this.configType = localStorage.getItem('configType') || 'singbox';
@@ -166,6 +170,8 @@ export const formLogicFn = (t) => {
                 this.$watch('enableClashUI', val => localStorage.setItem('enableClashUI', val));
                 this.$watch('externalController', val => localStorage.setItem('externalController', val));
                 this.$watch('externalUiDownloadUrl', val => localStorage.setItem('externalUiDownloadUrl', val));
+                this.$watch('forceClashProviders', val => localStorage.setItem('forceClashProviders', val));
+                this.$watch('forceClashProviderUA', val => localStorage.setItem('forceClashProviderUA', val));
                 this.$watch('customUA', val => localStorage.setItem('userAgent', val));
                 this.$watch('configEditor', val => {
                     localStorage.setItem('configEditor', val);
@@ -347,8 +353,12 @@ export const formLogicFn = (t) => {
                     this.generatedLinks = null;
                     this.shortenedLinks = null;
                     this.customShortCode = '';
+                    this.forceClashProviders = '';
+                    this.forceClashProviderUA = 'Clash.Meta';
                     // Also clear from localStorage
                     localStorage.removeItem('customShortCode');
+                    localStorage.removeItem('forceClashProviders');
+                    localStorage.removeItem('forceClashProviderUA');
                 }
             },
 
@@ -392,11 +402,21 @@ export const formLogicFn = (t) => {
                     }
 
                     const queryString = params.toString();
+                    const clashParams = new URLSearchParams(params);
+                    const forcedProviders = [...new Set(this.forceClashProviders
+                        .split(/\r?\n/)
+                        .map(url => url.trim())
+                        .filter(Boolean))];
+                    if (forcedProviders.length > 0) {
+                        clashParams.append('force_clash_providers', JSON.stringify(forcedProviders));
+                        clashParams.append('force_clash_provider_ua', this.forceClashProviderUA.trim() || 'Clash.Meta');
+                    }
+                    const clashQueryString = clashParams.toString();
 
                     this.generatedLinks = {
                         xray: origin + '/xray?' + queryString,
                         singbox: origin + '/singbox?' + queryString,
-                        clash: origin + '/clash?' + queryString,
+                        clash: origin + '/clash?' + clashQueryString,
                         surge: origin + '/surge?' + queryString
                     };
 
@@ -639,6 +659,23 @@ export const formLogicFn = (t) => {
                     this.customUA = ua;
                 }
 
+                const forceClashProviders = params.get('force_clash_providers');
+                if (forceClashProviders) {
+                    try {
+                        const parsed = JSON.parse(forceClashProviders);
+                        if (Array.isArray(parsed)) {
+                            this.forceClashProviders = parsed.join('\n');
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse force_clash_providers:', e);
+                    }
+                }
+
+                const forceClashProviderUA = params.get('force_clash_provider_ua');
+                if (forceClashProviderUA) {
+                    this.forceClashProviderUA = forceClashProviderUA;
+                }
+
                 const configId = params.get('configId');
                 if (configId) {
                     this.currentConfigId = configId;
@@ -647,7 +684,7 @@ export const formLogicFn = (t) => {
 
                 // Expand advanced options if any advanced settings are present
                 if (selectedRules || customRules || this.groupByCountry || this.enableClashUI ||
-                    externalController || externalUiDownloadUrl || ua || configId) {
+                    externalController || externalUiDownloadUrl || ua || configId || forceClashProviders) {
                     this.showAdvanced = true;
                 }
             }

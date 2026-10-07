@@ -8,6 +8,28 @@ import { sanitizeClashProxyGroups } from '../src/builders/helpers/clashConfigUti
 const t = createTranslator('zh-CN');
 
 describe('Clash Builder Tests', () => {
+  it('parses VLESS H2 links with encoded query separators and no fragment name', async () => {
+    const vless = 'vless://11111111-2222-3333-4444-555555555555@example.com:443?encryption=none%26security=tls%26type=h2%26host=edge.example.com%26path=%2Fvless-h2';
+    const builder = new ClashConfigBuilder(vless, [], [], null, 'zh-CN', 'Clash.Meta');
+
+    const yamlText = await builder.build();
+    const config = yaml.load(yamlText);
+    expect(config.proxies).toHaveLength(1);
+    expect(config.proxies[0]).toMatchObject({
+      name: 'example.com:443',
+      type: 'vless',
+      server: 'example.com',
+      port: 443,
+      tls: true,
+      servername: 'edge.example.com',
+      network: 'h2',
+      'h2-opts': {
+        path: '/vless-h2',
+        host: ['edge.example.com']
+      }
+    });
+  });
+
   it('should clean up proxy-groups and remove non-existent proxies', async () => {
     const input = `
 proxies:

@@ -26,3 +26,10 @@ export class InvalidConfigError extends ServiceError {
         this.name = 'InvalidConfigError';
     }
 }
+
+export class UpstreamBlockedError extends ServiceError {
+    constructor(message = 'Upstream subscription blocked this server') {
+        super(message, 502);
+        this.name = 'UpstreamBlockedError';
+    }
+}

@@ -14,7 +14,7 @@ import { encodeBase64, tryDecodeSubscriptionLines } from '../utils.js';
 import { APP_NAME, APP_SUBTITLE } from '../constants.js';
 import { ShortLinkService } from '../services/shortLinkService.js';
 import { ConfigStorageService } from '../services/configStorageService.js';
-import { ServiceError, MissingDependencyError } from '../services/errors.js';
+import { ServiceError, MissingDependencyError, InvalidPayloadError } from '../services/errors.js';
 import { normalizeRuntime } from '../runtime/runtimeConfig.js';
 import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateSubconverterConfig } from '../config/index.js';
 
@@ -126,8 +126,9 @@ export function createApp(bindings = {}) {
 
     app.get('/clash', async (c) => {
         try {
-            const config = c.req.query('config');
-            if (!config) {
+            const config = c.req.query('config') || '';
+            const forcedProviderUrls = parseHttpUrlArray(c.req.query('force_clash_providers'));
+            if (!config && forcedProviderUrls.length === 0) {
                 return c.text('Missing config parameter', 400);
             }
 
@@ -139,8 +140,10 @@ export function createApp(bindings = {}) {
             const enableClashUI = parseBooleanFlag(c.req.query('enable_clash_ui'));
             const externalController = c.req.query('external_controller');
             const externalUiDownloadUrl = c.req.query('external_ui_download_url');
+            const forcedProviderUserAgent = parseProviderUserAgent(c.req.query('force_clash_provider_ua'));
             const configId = c.req.query('configId');
             const lang = c.get('lang');
+            const effectiveConfig = removeForcedProviderLines(config, forcedProviderUrls);
 
             let baseConfig;
             if (configId) {
@@ -149,7 +152,7 @@ export function createApp(bindings = {}) {
             }
 
             const builder = new ClashConfigBuilder(
-                config,
+                effectiveConfig,
                 selectedRules,
                 customRules,
                 baseConfig,
@@ -159,7 +162,9 @@ export function createApp(bindings = {}) {
                 enableClashUI,
                 externalController,
                 externalUiDownloadUrl,
-                includeAutoSelect
+                includeAutoSelect,
+                forcedProviderUrls,
+                forcedProviderUserAgent
             );
             await builder.build();
             const userinfo = builder.getSubscriptionUserinfo();
@@ -443,6 +448,60 @@ function parseJsonArray(raw) {
 
 function parseBooleanFlag(value) {
     return value === 'true' || value === true;
+}
+
+function parseHttpUrlArray(raw) {
+    if (!raw) return [];
+    let parsed;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        throw new InvalidPayloadError('Invalid Force Provider URL list');
+    }
+    if (!Array.isArray(parsed) || parsed.length > 32) {
+        throw new InvalidPayloadError('Force Provider must be an array of at most 32 URLs');
+    }
+
+    const urls = [];
+    for (const value of parsed) {
+        if (typeof value !== 'string' || !value.trim()) continue;
+        let url;
+        try {
+            url = new URL(value.trim());
+        } catch {
+            throw new InvalidPayloadError(`Invalid Force Provider URL: ${value}`);
+        }
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            throw new InvalidPayloadError(`Force Provider only supports HTTP(S): ${value}`);
+        }
+        urls.push(url.toString());
+    }
+    return [...new Set(urls)];
+}
+
+function parseProviderUserAgent(raw) {
+    const value = (raw || 'Clash.Meta').trim();
+    if (!value || value.length > 256 || /[\r\n]/.test(value)) {
+        throw new InvalidPayloadError('Invalid Force Provider User-Agent');
+    }
+    return value;
+}
+
+function removeForcedProviderLines(input, forcedProviderUrls) {
+    if (!input || forcedProviderUrls.length === 0) return input;
+    const forced = new Set(forcedProviderUrls);
+    return input
+        .split(/\r?\n/)
+        .filter(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return true;
+            try {
+                return !forced.has(new URL(trimmed).toString());
+            } catch {
+                return true;
+            }
+        })
+        .join('\n');
 }
 
 function parseSemverLike(value) {

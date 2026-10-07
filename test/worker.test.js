@@ -77,6 +77,24 @@ describe('Worker', () => {
         expect(text).toContain('proxies:');
     });
 
+    it('GET /clash supports Force Provider without fetching the blocked URL', async () => {
+        const app = createTestApp();
+        const blockedUrl = 'https://blocked.example.com/sub/token';
+        const params = new URLSearchParams({
+            config: blockedUrl,
+            force_clash_providers: JSON.stringify([blockedUrl]),
+            force_clash_provider_ua: 'Clash.Meta'
+        });
+        const res = await app.request(`http://localhost/clash?${params.toString()}`);
+
+        expect(res.status).toBe(200);
+        const text = await res.text();
+        expect(text).toContain('proxy-providers:');
+        expect(text).toContain('blocked.example.com/sub/token');
+        expect(text).toContain('User-Agent');
+        expect(text).toContain('Clash.Meta');
+    });
+
     it('GET /clash rejects empty url-test proxy groups with a diagnostic error', async () => {
         const app = createTestApp();
         const config = `
@@ -113,5 +131,25 @@ proxy-groups:
         const text = await res.text();
         expect(text).toBeTruthy();
         expect(kvMock.put).toHaveBeenCalled();
+    });
+
+    it('does not overwrite an existing short code when query parameters differ', async () => {
+        const kv = new MemoryKVAdapter();
+        const app = createTestApp({ kv });
+        const sharedCode = 'shared123';
+        const baseUrl = 'http://localhost/clash?config=vless%3A%2F%2Fnode';
+        const providerUrl = 'http://localhost/clash?config=vless%3A%2F%2Fnode&force_clash_providers=%5B%22https%3A%2F%2Fexample.com%2Fsub%22%5D';
+
+        const first = await app.request(`http://localhost/shorten-v2?url=${encodeURIComponent(baseUrl)}&shortCode=${sharedCode}`);
+        expect(first.status).toBe(200);
+        expect(await first.text()).toBe(sharedCode);
+
+        const second = await app.request(`http://localhost/shorten-v2?url=${encodeURIComponent(providerUrl)}&shortCode=${sharedCode}`);
+        expect(second.status).toBe(200);
+        const secondCode = await second.text();
+        expect(secondCode).not.toBe(sharedCode);
+
+        expect(await kv.get(sharedCode)).toBe('?config=vless%3A%2F%2Fnode');
+        expect(await kv.get(secondCode)).toContain('force_clash_providers');
     });
 });

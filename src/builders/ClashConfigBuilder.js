@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import { CLASH_CONFIG, generateRules, generateClashRuleSets, getOutbounds, PREDEFINED_RULE_SETS, DIRECT_DEFAULT_RULES } from '../config/index.js';
 import { BaseConfigBuilder } from './BaseConfigBuilder.js';
-import { deepCopy, groupProxiesByCountry, buildCountryNameFilter } from '../utils.js';
+import { createStableProviderName, deepCopy, groupProxiesByCountry, buildCountryNameFilter } from '../utils.js';
 import { addProxyWithDedup } from './helpers/proxyHelpers.js';
 import { buildSelectorMembers, buildNodeSelectMembers, buildCustomRuleMembers, uniqueNames } from './helpers/groupBuilder.js';
 import { emitClashRules, sanitizeClashProxyGroups } from './helpers/clashConfigUtils.js';
@@ -18,6 +18,12 @@ import { InvalidConfigError } from '../services/errors.js';
 function supportsMrsFormat(userAgent) {
     if (!userAgent) return true; // Default to mrs for unknown clients
     const ua = userAgent.toLowerCase();
+
+    // Clash Meta for Android builds may bundle cores without MRS support.
+    // YAML rule providers stay compatible across old and new CMFA releases.
+    if (ua.includes('clashmetaforandroid') || ua.includes('meta-for-android')) {
+        return false;
+    }
     
     // Clients confirmed to support MRS format (Clash Meta/mihomo based)
     if (ua.includes('mihomo') || 
@@ -48,7 +54,7 @@ function getClashUdpValue(proxy, defaultEnabled = true) {
 }
 
 export class ClashConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, includeAutoSelect = true) {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, includeAutoSelect = true, forcedProviderUrls = [], forcedProviderUserAgent = 'Clash.Meta') {
         if (!baseConfig) {
             baseConfig = CLASH_CONFIG;
         }
@@ -60,6 +66,31 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         this.enableClashUI = enableClashUI;
         this.externalController = externalController;
         this.externalUiDownloadUrl = externalUiDownloadUrl;
+        this.forcedProviderUrls = [...new Set((forcedProviderUrls || []).map(url => url?.trim()).filter(Boolean))];
+        this.forcedProviderUserAgent = forcedProviderUserAgent?.trim() || 'Clash.Meta';
+        this.forcedProviderDescriptors = undefined;
+    }
+
+    getForcedProviderDescriptors(reservedNames = []) {
+        if (this.forcedProviderDescriptors) {
+            return this.forcedProviderDescriptors;
+        }
+
+        const usedNames = new Set(reservedNames);
+        const descriptors = [];
+        for (const url of this.forcedProviderUrls) {
+            const stableName = createStableProviderName(url).replace('_auto_provider_', '_direct_provider_');
+            let name = stableName;
+            let suffix = 2;
+            while (usedNames.has(name)) {
+                name = `${stableName}_${suffix}`;
+                suffix += 1;
+            }
+            usedNames.add(name);
+            descriptors.push({ name, url });
+        }
+        this.forcedProviderDescriptors = descriptors;
+        return descriptors;
     }
 
     /**
@@ -71,6 +102,10 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         return format === 'clash';
     }
 
+    shouldSurfaceUpstreamBlockedError() {
+        return true;
+    }
+
     /**
      * Generate proxy-providers configuration from collected URLs
      * @returns {object} - proxy-providers object
@@ -78,12 +113,32 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
     generateProxyProviders() {
         const providers = {};
         const existingProviders = this.getExistingProviderNames();
-        this.getAutoProviderDescriptors(existingProviders).forEach(({ name, url }) => {
+        const autoProviders = this.getAutoProviderDescriptors(existingProviders);
+        autoProviders.forEach(({ name, url }) => {
             providers[name] = {
                 type: 'http',
                 url: url,
                 path: `./proxy_providers/${name}.yaml`,
                 interval: 3600,
+                'health-check': {
+                    enable: true,
+                    url: 'https://www.gstatic.com/generate_204',
+                    interval: 300,
+                    timeout: 5000,
+                    lazy: true
+                }
+            };
+        });
+        const reservedNames = [...existingProviders, ...autoProviders.map(provider => provider.name)];
+        this.getForcedProviderDescriptors(reservedNames).forEach(({ name, url }) => {
+            providers[name] = {
+                type: 'http',
+                url,
+                path: `./proxy_providers/${name}.yaml`,
+                interval: 3600,
+                header: {
+                    'User-Agent': [this.forcedProviderUserAgent]
+                },
                 'health-check': {
                     enable: true,
                     url: 'https://www.gstatic.com/generate_204',
@@ -101,7 +156,13 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
      * @returns {string[]} - Array of provider names
      */
     getProviderNames() {
-        return this.getAutoProviderDescriptors(this.getExistingProviderNames()).map(provider => provider.name);
+        const existingProviders = this.getExistingProviderNames();
+        const autoProviders = this.getAutoProviderDescriptors(existingProviders);
+        const forcedProviders = this.getForcedProviderDescriptors([
+            ...existingProviders,
+            ...autoProviders.map(provider => provider.name)
+        ]);
+        return [...autoProviders, ...forcedProviders].map(provider => provider.name);
     }
 
     getExistingProviderNames() {
@@ -208,6 +269,12 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
                     } : undefined,
                     'grpc-opts': proxy.transport?.type === 'grpc' ? {
                         'grpc-service-name': proxy.transport.service_name,
+                    } : undefined,
+                    'h2-opts': proxy.transport?.type === 'h2' ? {
+                        path: proxy.transport.path || '/',
+                        ...(proxy.transport.headers?.host
+                            ? { host: [proxy.transport.headers.host] }
+                            : {})
                     } : undefined,
                     tfo: proxy.tcp_fast_open,
                     'skip-cert-verify': !!proxy.tls?.insecure,
@@ -672,7 +739,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         const ruleResults = emitClashRules(rules, this.t);
 
         // Add proxy-providers if we have any
-        if (this.providerUrls.length > 0) {
+        if (this.providerUrls.length > 0 || this.forcedProviderUrls.length > 0) {
             this.config['proxy-providers'] = {
                 ...this.config['proxy-providers'],
                 ...this.generateProxyProviders()

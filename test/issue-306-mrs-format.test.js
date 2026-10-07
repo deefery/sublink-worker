@@ -45,6 +45,8 @@ describe('Issue #306: MRS format compatibility for legacy Clash clients', () => 
       'ClashForAndroid/2.5.12',
       'ClashForWindows/0.20.0',
       'Merlin Clash',
+      'ClashMetaForAndroid/2.10.0',
+      'ClashMetaForAndroid/2.10.1',
     ];
 
     // 这些UA应该使用mrs格式（Meta客户端或未知客户端）
@@ -53,7 +55,6 @@ describe('Issue #306: MRS format compatibility for legacy Clash clients', () => 
       'Clash.Meta/v1.18.0',
       'mihomo/1.18.0',
       'Stash/2.4.0',
-      'ClashMetaForAndroid/2.10.0',
       'verge-rev/1.0.0',
       'unknown-client',  // 未知客户端默认用mrs
     ];

@@ -16,7 +16,13 @@ export class ShortLinkService {
 
     async createShortLink(queryString, providedCode) {
         const kv = this.ensureKv();
-        const shortCode = providedCode || generateWebPath();
+        let shortCode = providedCode || generateWebPath();
+        if (providedCode) {
+            const existingQuery = await kv.get(providedCode);
+            if (existingQuery !== null && existingQuery !== queryString) {
+                shortCode = generateWebPath();
+            }
+        }
         const ttl = this.options.shortLinkTtlSeconds;
         const putOptions = ttl ? { expirationTtl: ttl } : undefined;
         await kv.put(shortCode, queryString, putOptions);

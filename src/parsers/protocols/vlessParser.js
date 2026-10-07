@@ -1,7 +1,20 @@
 import { parseServerInfo, parseUrlParams, createTlsConfig, createTransportConfig, parseBool } from '../../utils.js';
 
+function normalizeEncodedQuerySeparators(url) {
+    const questionIndex = url.indexOf('?');
+    if (questionIndex < 0) return url;
+
+    const hashIndex = url.indexOf('#', questionIndex);
+    const queryEnd = hashIndex >= 0 ? hashIndex : url.length;
+    const query = url.slice(questionIndex + 1, queryEnd);
+    const normalizedQuery = query.replace(/%26(?=[A-Za-z][A-Za-z0-9_.-]*=)/gi, '&');
+
+    if (normalizedQuery === query) return url;
+    return `${url.slice(0, questionIndex + 1)}${normalizedQuery}${url.slice(queryEnd)}`;
+}
+
 export function parseVless(url) {
-    const { addressPart, params, name } = parseUrlParams(url);
+    const { addressPart, params, name } = parseUrlParams(normalizeEncodedQuerySeparators(url));
     const [uuid, serverInfo] = addressPart.split('@');
     const { host, port } = parseServerInfo(serverInfo);
 
@@ -19,7 +32,7 @@ export function parseVless(url) {
 
     return {
         type: 'vless',
-        tag: name,
+        tag: name || `${host}:${port}`,
         server: host,
         server_port: port,
         uuid: decodeURIComponent(uuid),

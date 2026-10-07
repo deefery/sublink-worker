@@ -5,8 +5,13 @@ compatibility_date = "2024-07-24"
 compatibility_flags = ["nodejs_compat"]
 
 kv_namespaces = [
-  { binding = "SUBLINK_KV", id = "8943789ed0af49659f887fc740d11240" }
+  { binding = "SUBLINK_KV", id = "19a179aa790944889cba2cd9ba16645d" }
+]
+
+routes = [
+  { pattern = "sub.zhijic.com", custom_domain = true }
 ]
 
 [assets]
 directory = "./public"
+

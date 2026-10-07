@@ -47,6 +47,39 @@ describe('Auto Proxy Providers Detection', () => {
     });
 
     describe('Clash Builder', () => {
+        it('should add forced Clash providers without fetching them', async () => {
+            const forcedUrl = 'https://blocked.example.com/sub/token';
+            const builder = new ClashConfigBuilder(
+                '',
+                [],
+                [],
+                null,
+                'zh-CN',
+                'test-agent',
+                false,
+                false,
+                undefined,
+                undefined,
+                true,
+                [forcedUrl],
+                'Clash.Meta'
+            );
+
+            const yamlText = await builder.build();
+            const config = yaml.load(yamlText);
+            expect(fetchSubscriptionWithFormat).not.toHaveBeenCalled();
+
+            const providerNames = Object.keys(config['proxy-providers']);
+            expect(providerNames).toHaveLength(1);
+            expect(providerNames[0]).toMatch(/^_direct_provider_[a-z0-9]+$/);
+            const provider = config['proxy-providers'][providerNames[0]];
+            expect(provider.url).toBe(forcedUrl);
+            expect(provider.header['User-Agent']).toEqual(['Clash.Meta']);
+
+            const nodeSelect = config['proxy-groups'].find(g => g.name === '🚀 节点选择');
+            expect(nodeSelect.use).toContain(providerNames[0]);
+        });
+
         it('should use Clash URL as proxy-provider when format is Clash YAML', async () => {
             // Mock fetchSubscriptionWithFormat to return Clash format
             fetchSubscriptionWithFormat.mockResolvedValue({
