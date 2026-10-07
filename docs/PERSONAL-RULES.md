@@ -123,3 +123,37 @@ Keep the router-local catchall rules until all of the following are true:
 Only then may duplicate router-local entries from this migration be removed. Router-specific rules and unrelated providers must remain. Reload ShellCrash/CrashCore only; do not reboot the whole router for this migration.
 
 Chrome WebRTC protection remains a browser setting and is intentionally outside this rule source.
+
+## Production migration completed — 2026-10-08
+
+The household ShellCrash router was migrated to the stable Sublink profile on 2026-10-08.
+
+Final production state:
+
+- The persisted ShellCrash subscription now opts in with `personal_rules=home`.
+- The 60 duplicate router-local exact `DOMAIN` rules from the 2026-10-02 / 2026-10-03 catchall migration were removed from the router-side custom rule file.
+- The same 60 rules are now supplied by Sublink as the single maintained source.
+- Independent Mihomo controller validation on port `9999` reported `60/60` expected exact domains with `policyMismatch=0`.
+- Policy split remained exactly:
+  - 44 -> `Ad Block`
+  - 4 -> `AI Services`
+  - 12 -> `Non-China`
+- No unrelated router-specific rules, proxy groups, nodes, DNS settings, providers, or browser WebRTC settings were intentionally changed by this migration.
+
+Router rollback backup created before removal of the duplicate local rules:
+
+```text
+/data/ShellCrash/backups/sublink-personal-rules/20261008-005955-27323
+```
+
+The Windows-side emergency rollback launcher is:
+
+```text
+ShellCrash-Personal-Rules-Rollback.cmd
+```
+
+The rollback launcher is self-contained and restores the saved `ShellCrash.cfg` and `rules.yaml` before refreshing ShellCrash.
+
+### Ongoing maintenance model
+
+From this migration onward, additions or removals for this reviewed household exact-domain set should be made only in `src/config/personalRuleProfiles.js`, followed by the normal test and deploy flow above. The router should refresh the existing subscription; it should not receive another duplicate local copy of these 60 rules.
