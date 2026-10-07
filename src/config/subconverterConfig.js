@@ -37,9 +37,9 @@ function buildCountryGroupRefs(countryGroupNames) {
  * @param {boolean} options.groupByCountry - Whether to group proxies by country
  * @returns {string} INI format config string
  */
-export function generateSubconverterConfig({ selectedRules = [], customRules = [], lang = 'zh-CN', includeAutoSelect = true, groupByCountry = false } = {}) {
+export function generateSubconverterConfig({ selectedRules = [], customRules = [], personalRules = [], lang = 'zh-CN', includeAutoSelect = true, groupByCountry = false } = {}) {
 	const t = createTranslator(lang);
-	const rules = generateRules(selectedRules, customRules);
+	const rules = generateRules(selectedRules, customRules, personalRules);
 
 	const lines = ['[custom]'];
 
@@ -57,10 +57,15 @@ export function generateSubconverterConfig({ selectedRules = [], customRules = [
 		}
 	});
 
-	// First pass: domain-type rules (DOMAIN-SUFFIX, DOMAIN-KEYWORD, GEOSITE)
+	// First pass: domain-type rules (DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, GEOSITE)
 	rules.forEach(rule => {
 		const groupName = t(`outboundNames.${rule.outbound}`);
 
+		if (rule.domain) {
+			rule.domain.forEach(domain => {
+				if (domain) lines.push(`ruleset=${groupName},[]DOMAIN,${domain}`);
+			});
+		}
 		if (rule.domain_suffix) {
 			rule.domain_suffix.forEach(suffix => {
 				if (suffix) lines.push(`ruleset=${groupName},[]DOMAIN-SUFFIX,${suffix}`);

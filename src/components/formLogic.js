@@ -90,6 +90,7 @@ export const formLogicFn = (t) => {
             externalUiDownloadUrl: '',
             forceClashProviders: '',
             forceClashProviderUA: 'Clash.Meta',
+            personalRulesProfile: '',
             configType: 'singbox',
             configEditor: '',
             savingConfig: false,
@@ -139,6 +140,7 @@ export const formLogicFn = (t) => {
                 this.externalUiDownloadUrl = localStorage.getItem('externalUiDownloadUrl') || '';
                 this.forceClashProviders = localStorage.getItem('forceClashProviders') || '';
                 this.forceClashProviderUA = localStorage.getItem('forceClashProviderUA') || 'Clash.Meta';
+                this.personalRulesProfile = localStorage.getItem('personalRulesProfile') || '';
                 this.customUA = localStorage.getItem('userAgent') || '';
                 this.configEditor = localStorage.getItem('configEditor') || '';
                 this.configType = localStorage.getItem('configType') || 'singbox';
@@ -172,6 +174,7 @@ export const formLogicFn = (t) => {
                 this.$watch('externalUiDownloadUrl', val => localStorage.setItem('externalUiDownloadUrl', val));
                 this.$watch('forceClashProviders', val => localStorage.setItem('forceClashProviders', val));
                 this.$watch('forceClashProviderUA', val => localStorage.setItem('forceClashProviderUA', val));
+                this.$watch('personalRulesProfile', val => localStorage.setItem('personalRulesProfile', val));
                 this.$watch('customUA', val => localStorage.setItem('userAgent', val));
                 this.$watch('configEditor', val => {
                     localStorage.setItem('configEditor', val);
@@ -218,6 +221,10 @@ export const formLogicFn = (t) => {
                         params.append('customRules', JSON.stringify(customRules));
                     }
                 } catch { }
+
+                if (this.personalRulesProfile) {
+                    params.append('personal_rules', this.personalRulesProfile);
+                }
 
                 if (!this.includeAutoSelect) {
                     params.append('include_auto_select', 'false');
@@ -355,10 +362,12 @@ export const formLogicFn = (t) => {
                     this.customShortCode = '';
                     this.forceClashProviders = '';
                     this.forceClashProviderUA = 'Clash.Meta';
+                    this.personalRulesProfile = '';
                     // Also clear from localStorage
                     localStorage.removeItem('customShortCode');
                     localStorage.removeItem('forceClashProviders');
                     localStorage.removeItem('forceClashProviderUA');
+                    localStorage.removeItem('personalRulesProfile');
                 }
             },
 
@@ -402,7 +411,12 @@ export const formLogicFn = (t) => {
                     }
 
                     const queryString = params.toString();
-                    const clashParams = new URLSearchParams(params);
+                    const routingParams = new URLSearchParams(params);
+                    if (this.personalRulesProfile) {
+                        routingParams.append('personal_rules', this.personalRulesProfile);
+                    }
+                    const routingQueryString = routingParams.toString();
+                    const clashParams = new URLSearchParams(routingParams);
                     const forcedProviders = [...new Set(this.forceClashProviders
                         .split(/\r?\n/)
                         .map(url => url.trim())
@@ -415,9 +429,9 @@ export const formLogicFn = (t) => {
 
                     this.generatedLinks = {
                         xray: origin + '/xray?' + queryString,
-                        singbox: origin + '/singbox?' + queryString,
+                        singbox: origin + '/singbox?' + routingQueryString,
                         clash: origin + '/clash?' + clashQueryString,
-                        surge: origin + '/surge?' + queryString
+                        surge: origin + '/surge?' + routingQueryString
                     };
 
                     // Scroll to results
@@ -676,6 +690,11 @@ export const formLogicFn = (t) => {
                     this.forceClashProviderUA = forceClashProviderUA;
                 }
 
+                const personalRulesProfile = params.get('personal_rules');
+                if (personalRulesProfile) {
+                    this.personalRulesProfile = personalRulesProfile;
+                }
+
                 const configId = params.get('configId');
                 if (configId) {
                     this.currentConfigId = configId;
@@ -684,7 +703,7 @@ export const formLogicFn = (t) => {
 
                 // Expand advanced options if any advanced settings are present
                 if (selectedRules || customRules || this.groupByCountry || this.enableClashUI ||
-                    externalController || externalUiDownloadUrl || ua || configId || forceClashProviders) {
+                    externalController || externalUiDownloadUrl || ua || configId || forceClashProviders || personalRulesProfile) {
                     this.showAdvanced = true;
                 }
             }

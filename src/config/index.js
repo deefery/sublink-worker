@@ -30,9 +30,16 @@ export {
 export {
 	getOutbounds,
 	generateRules,
+	normalizeExactDomains,
 	generateRuleSets,
 	generateClashRuleSets
 } from './ruleGenerators.js';
+
+export {
+	PERSONAL_RULE_PROFILES,
+	getPersonalRuleProfile,
+	getPersonalRuleProfileOptions
+} from './personalRuleProfiles.js';
 
 // Subconverter Config
 export { generateSubconverterConfig } from './subconverterConfig.js';

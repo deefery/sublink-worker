@@ -14,12 +14,14 @@ const ANYTLS_OPTION_KEYS = {
 };
 
 export class SingboxConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, singboxVersion = '1.12', includeAutoSelect = true) {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, singboxVersion = '1.12', includeAutoSelect = true, personalRules = [], personalOutbounds = []) {
         const resolvedBaseConfig = baseConfig ?? SING_BOX_CONFIG;
         super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect);
 
         this.selectedRules = selectedRules;
         this.customRules = customRules;
+        this.personalRules = personalRules;
+        this.personalOutbounds = personalOutbounds;
         this.countryGroupNames = [];
         this.manualGroupName = null;
         this.enableClashUI = enableClashUI;
@@ -588,7 +590,7 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
     }
 
     formatConfig() {
-        const rules = generateRules(this.selectedRules, this.customRules);
+        const rules = generateRules(this.selectedRules, this.customRules, this.personalRules);
         const { site_rule_sets, ip_rule_sets } = generateRuleSets(this.selectedRules, this.customRules);
 
         this.config.route.rule_set = [...site_rule_sets, ...ip_rule_sets];
@@ -625,11 +627,12 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
             }, rule));
         });
 
-        rules.filter(rule => hasMatchValues(rule.domain_suffix) || hasMatchValues(rule.domain_keyword)).map(rule => {
+        rules.filter(rule => hasMatchValues(rule.domain) || hasMatchValues(rule.domain_suffix) || hasMatchValues(rule.domain_keyword)).map(rule => {
             const entry = {
                 ...this.buildRouteTarget(rule)
             };
 
+            if (hasMatchValues(rule.domain)) entry.domain = rule.domain;
             if (hasMatchValues(rule.domain_suffix)) entry.domain_suffix = rule.domain_suffix;
             if (hasMatchValues(rule.domain_keyword)) entry.domain_keyword = rule.domain_keyword;
 

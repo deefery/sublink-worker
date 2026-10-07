@@ -54,13 +54,15 @@ function getClashUdpValue(proxy, defaultEnabled = true) {
 }
 
 export class ClashConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, includeAutoSelect = true, forcedProviderUrls = [], forcedProviderUserAgent = 'Clash.Meta') {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, includeAutoSelect = true, forcedProviderUrls = [], forcedProviderUserAgent = 'Clash.Meta', personalRules = [], personalOutbounds = []) {
         if (!baseConfig) {
             baseConfig = CLASH_CONFIG;
         }
         super(inputString, baseConfig, lang, userAgent, groupByCountry, includeAutoSelect);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
+        this.personalRules = personalRules;
+        this.personalOutbounds = personalOutbounds;
         this.countryGroupNames = [];
         this.manualGroupName = null;
         this.enableClashUI = enableClashUI;
@@ -729,7 +731,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
 
     // 生成规则
     generateRules() {
-        return generateRules(this.selectedRules, this.customRules);
+        return generateRules(this.selectedRules, this.customRules, this.personalRules);
     }
 
     formatConfig() {

@@ -1,0 +1,216 @@
+port: 7890
+socks-port: 7891
+allow-lan: false
+mode: rule
+log-level: info
+geodata-mode: true
+geo-auto-update: true
+geodata-loader: standard
+geo-update-interval: 24
+geox-url:
+  geoip: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
+  geosite: >-
+    https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
+  mmdb: >-
+    https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
+  asn: >-
+    https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb
+rule-providers:
+  geolocation-cn:
+    type: http
+    format: mrs
+    behavior: domain
+    url: >-
+      https://gh-proxy.com/https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/geolocation-cn.mrs
+    path: ./ruleset/geolocation-cn.mrs
+    interval: 86400
+  cn:
+    type: http
+    format: mrs
+    behavior: domain
+    url: >-
+      https://gh-proxy.com/https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/cn.mrs
+    path: ./ruleset/cn.mrs
+    interval: 86400
+  geolocation-!cn:
+    type: http
+    format: mrs
+    behavior: domain
+    url: >-
+      https://gh-proxy.com/https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/geolocation-!cn.mrs
+    path: ./ruleset/geolocation-!cn.mrs
+    interval: 86400
+  private-ip:
+    type: http
+    format: mrs
+    behavior: ipcidr
+    url: >-
+      https://gh-proxy.com/https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/private.mrs
+    path: ./ruleset/private-ip.mrs
+    interval: 86400
+  cn-ip:
+    type: http
+    format: mrs
+    behavior: ipcidr
+    url: >-
+      https://gh-proxy.com/https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cn.mrs
+    path: ./ruleset/cn-ip.mrs
+    interval: 86400
+dns:
+  enable: true
+  ipv6: true
+  respect-rules: true
+  enhanced-mode: fake-ip
+  nameserver:
+    - https://120.53.53.53/dns-query
+    - https://223.5.5.5/dns-query
+  proxy-server-nameserver:
+    - https://120.53.53.53/dns-query
+    - https://223.5.5.5/dns-query
+  nameserver-policy:
+    geosite:cn,private:
+      - https://120.53.53.53/dns-query
+      - https://223.5.5.5/dns-query
+    geosite:geolocation-!cn:
+      - https://dns.cloudflare.com/dns-query
+      - https://dns.google/dns-query
+proxies:
+  - name: Example-Node
+    type: vless
+    server: example.com
+    port: 443
+    uuid: 11111111-1111-4111-8111-111111111111
+    tls: true
+    servername: example.com
+    network: ws
+    ws-opts:
+      path: /demo
+      headers:
+        host: example.com
+    tfo: false
+    skip-cert-verify: false
+    udp: true
+proxy-groups:
+  - type: select
+    name: 🚀 Node Select
+    proxies:
+      - ⚡ Auto Select
+      - Example-Node
+      - DIRECT
+      - REJECT
+  - name: ⚡ Auto Select
+    type: url-test
+    proxies:
+      - Example-Node
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    lazy: false
+  - type: select
+    name: 🏠 Private Network
+    proxies:
+      - DIRECT
+      - 🚀 Node Select
+      - Example-Node
+      - REJECT
+  - type: select
+    name: 🔒 China Services
+    proxies:
+      - DIRECT
+      - 🚀 Node Select
+      - Example-Node
+      - REJECT
+  - type: select
+    name: 🌐 Non-China
+    proxies:
+      - 🚀 Node Select
+      - Example-Node
+      - DIRECT
+      - REJECT
+  - type: select
+    name: 🛑 Ad Blocking
+    proxies:
+      - 🚀 Node Select
+      - Example-Node
+      - DIRECT
+      - REJECT
+  - type: select
+    name: 💬 AI Services
+    proxies:
+      - 🚀 Node Select
+      - Example-Node
+      - DIRECT
+      - REJECT
+  - type: select
+    name: 🐟 Fall Back
+    proxies:
+      - 🚀 Node Select
+      - Example-Node
+      - DIRECT
+      - REJECT
+rules:
+  - DOMAIN,adx-cfg-u1.ubixioe.com,🛑 Ad Blocking
+  - DOMAIN,fcount-api.webapp.easebar.com,🛑 Ad Blocking
+  - DOMAIN,adblock.telemetry.eyeo.com,🛑 Ad Blocking
+  - DOMAIN,adx.ads.vungle.com,🛑 Ad Blocking
+  - DOMAIN,adx.mosspf.com,🛑 Ad Blocking
+  - DOMAIN,amplify.outbrain.com,🛑 Ad Blocking
+  - DOMAIN,analytics-tcp.mintegral.net,🛑 Ad Blocking
+  - DOMAIN,api.myadsget.com,🛑 Ad Blocking
+  - DOMAIN,api.rlcdn.com,🛑 Ad Blocking
+  - DOMAIN,browser-intake-us5-datadoghq.com,🛑 Ad Blocking
+  - DOMAIN,c.cnzz.com,🛑 Ad Blocking
+  - DOMAIN,cdn-gl.imrworldwide.com,🛑 Ad Blocking
+  - DOMAIN,cdn.bizible.com,🛑 Ad Blocking
+  - DOMAIN,cdn.brandmetrics.com,🛑 Ad Blocking
+  - DOMAIN,cdn.cxense.com,🛑 Ad Blocking
+  - DOMAIN,cdn.parsely.com,🛑 Ad Blocking
+  - DOMAIN,collector.brandmetrics.com,🛑 Ad Blocking
+  - DOMAIN,comcluster.cxense.com,🛑 Ad Blocking
+  - DOMAIN,config.ads.vungle.com,🛑 Ad Blocking
+  - DOMAIN,configure-tcp-android.mtgglobals.com,🛑 Ad Blocking
+  - DOMAIN,distribution.rqmob.com,🛑 Ad Blocking
+  - DOMAIN,id.cxense.com,🛑 Ad Blocking
+  - DOMAIN,insight.adsrvr.org,🛑 Ad Blocking
+  - DOMAIN,logx.optimizely.com,🛑 Ad Blocking
+  - DOMAIN,match.adsrvr.org,🛑 Ad Blocking
+  - DOMAIN,mcdp-wndc1.outbrain.com,🛑 Ad Blocking
+  - DOMAIN,merequartz.com,🛑 Ad Blocking
+  - DOMAIN,mv.outbrain.com,🛑 Ad Blocking
+  - DOMAIN,net.mtgglobals.com,🛑 Ad Blocking
+  - DOMAIN,p1.parsely.com,🛑 Ad Blocking
+  - DOMAIN,quadquality.com,🛑 Ad Blocking
+  - DOMAIN,s4.cnzz.com,🛑 Ad Blocking
+  - DOMAIN,secure-us.imrworldwide.com,🛑 Ad Blocking
+  - DOMAIN,segment-data.zqtk.net,🛑 Ad Blocking
+  - DOMAIN,tkda.mosspf.com,🛑 Ad Blocking
+  - DOMAIN,tr.outbrain.com,🛑 Ad Blocking
+  - DOMAIN,track.celtra.com,🛑 Ad Blocking
+  - DOMAIN,us.tags.newscgp.com,🛑 Ad Blocking
+  - DOMAIN,vg-new-ssplib-hb.mtgglobals.com,🛑 Ad Blocking
+  - DOMAIN,vtrk.dv.tech,🛑 Ad Blocking
+  - DOMAIN,wave.outbrain.com,🛑 Ad Blocking
+  - DOMAIN,widgets.outbrain.com,🛑 Ad Blocking
+  - DOMAIN,www.dianomi.com,🛑 Ad Blocking
+  - DOMAIN,z11.cnzz.com,🛑 Ad Blocking
+  - DOMAIN,registry.ollama.ai,💬 AI Services
+  - DOMAIN,api.openlux.ai,💬 AI Services
+  - DOMAIN,www.openlux.ai,💬 AI Services
+  - DOMAIN,yunwu.ai,💬 AI Services
+  - DOMAIN,dns.twnic.tw,🌐 Non-China
+  - DOMAIN,api.revenuecat.com,🌐 Non-China
+  - DOMAIN,api.languagetoolplus.com,🌐 Non-China
+  - DOMAIN,core2.myqnapcloud.io,🌐 Non-China
+  - DOMAIN,edge.myqnapcloud.io,🌐 Non-China
+  - DOMAIN,api-js.datadome.co,🌐 Non-China
+  - DOMAIN,js.datadome.co,🌐 Non-China
+  - DOMAIN,ct.captcha-delivery.com,🌐 Non-China
+  - DOMAIN,geo.captcha-delivery.com,🌐 Non-China
+  - DOMAIN,static.captcha-delivery.com,🌐 Non-China
+  - DOMAIN,open-api.spot.im,🌐 Non-China
+  - DOMAIN,cdn.privacy-mgmt.com,🌐 Non-China
+  - RULE-SET,geolocation-cn,🔒 China Services
+  - RULE-SET,cn,🔒 China Services
+  - RULE-SET,geolocation-!cn,🌐 Non-China
+  - RULE-SET,private-ip,🏠 Private Network,no-resolve
+  - RULE-SET,cn-ip,🔒 China Services,no-resolve
+  - MATCH,🐟 Fall Back

@@ -9,6 +9,8 @@ export class BaseConfigBuilder {
         this.inputString = inputString;
         this.config = deepCopy(baseConfig);
         this.customRules = [];
+        this.personalRules = [];
+        this.personalOutbounds = [];
         this.selectedRules = [];
         this.t = createTranslator(lang);
         this.userAgent = userAgent;
@@ -341,7 +343,7 @@ export class BaseConfigBuilder {
         } else {
             outbounds = getOutbounds(PREDEFINED_RULE_SETS.minimal);
         }
-        return outbounds;
+        return [...new Set([...outbounds, ...this.personalOutbounds])];
     }
 
     getProxyList() {
@@ -429,7 +431,7 @@ export class BaseConfigBuilder {
     }
 
     generateRules() {
-        return generateRules(this.selectedRules, this.customRules);
+        return generateRules(this.selectedRules, this.customRules, this.personalRules);
     }
 
     formatConfig() {

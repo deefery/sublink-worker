@@ -97,6 +97,19 @@ export const CustomRules = (props) => {
                 />
             </div>
 
+            {/* Exact Domain */}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('customRuleDomain')}
+                </label>
+                <input
+                    type="text"
+                    x-model="rule.domain"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                    placeholder={t('customRuleDomainPlaceholder')}
+                />
+            </div>
+
             {/* Domain Suffix */}
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -214,7 +227,7 @@ export const CustomRules = (props) => {
           id="customRulesJson"
           name="customRulesJson"
           model="jsonContent"
-          placeholder='[{"name": "MyRule", "src_ip_cidr": "192.168.1.13/32", "domain_suffix": "example.com", "outbound": "Proxy"}]'
+          placeholder='[{"name": "MyRule", "domain": "api.example.com", "domain_suffix": "example.com"}]'
           variant="mono"
           textareaClass="min-h-[16rem]"
           containerClass="group"
@@ -295,6 +308,7 @@ export const CustomRules = (props) => {
             addRule() {
               this.rules.push({
                 name: '',
+                domain: '',
                 domain_suffix: '',
                 domain_keyword: '',
                 src_ip_cidr: '',

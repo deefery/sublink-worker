@@ -5,11 +5,13 @@ import { addProxyWithDedup } from './helpers/proxyHelpers.js';
 import { buildSelectorMembers, buildNodeSelectMembers, buildCustomRuleMembers, uniqueNames } from './helpers/groupBuilder.js';
 
 export class SurgeConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry, includeAutoSelect = true) {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry, includeAutoSelect = true, personalRules = [], personalOutbounds = []) {
         const resolvedBaseConfig = baseConfig ?? SURGE_CONFIG;
         super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
+        this.personalRules = personalRules;
+        this.personalOutbounds = personalOutbounds;
         this.subscriptionUrl = null;
         this.countryGroupNames = [];
         this.manualGroupName = null;
@@ -373,7 +375,7 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
     }
 
     formatConfig() {
-        const rules = generateRules(this.selectedRules, this.customRules);
+        const rules = generateRules(this.selectedRules, this.customRules, this.personalRules);
         let finalConfig = [];
 
         if (this.subscriptionUrl) {
@@ -436,6 +438,12 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
                 } else if (typeof safeValue === 'string' && safeValue.includes('/')) {
                     finalConfig.push(`# SRC-IP-CIDR not supported by Surge, skipped: ${safeValue}`);
                 }
+            });
+        });
+
+        rules.filter(rule => Array.isArray(rule.domain) && rule.domain.length > 0).map(rule => {
+            rule.domain.forEach(domain => {
+                finalConfig.push(`DOMAIN,${domain},${this.t('outboundNames.' + rule.outbound)}`);
             });
         });
 

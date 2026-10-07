@@ -5,6 +5,7 @@
 
 import { UNIFIED_RULES, PREDEFINED_RULE_SETS, SITE_RULE_SETS, IP_RULE_SETS, CLASH_SITE_RULE_SETS, CLASH_IP_RULE_SETS } from './rules.js';
 import { SITE_RULE_SET_BASE_URL, IP_RULE_SET_BASE_URL, CLASH_SITE_RULE_SET_BASE_URL, CLASH_IP_RULE_SET_BASE_URL } from './ruleUrls.js';
+import { InvalidPayloadError } from '../services/errors.js';
 
 function toStringArray(value) {
 	if (Array.isArray(value)) {
@@ -16,6 +17,28 @@ function toStringArray(value) {
 		return value.split(',').map(x => x.trim()).filter(Boolean);
 	}
 	return [];
+}
+
+const EXACT_DOMAIN_LABEL_RE = /^[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$/;
+
+export function normalizeExactDomains(value) {
+	const domains = toStringArray(value).map(domain => domain.toLowerCase());
+	const result = [];
+	const seen = new Set();
+	for (const domain of domains) {
+		if (domain.length > 253 || domain.startsWith('.') || domain.endsWith('.') || domain.includes('://') || domain.includes('/') || domain.includes('*')) {
+			throw new InvalidPayloadError(`Invalid exact DOMAIN value: ${domain}`);
+		}
+		const labels = domain.split('.');
+		if (labels.some(label => !label || label.length > 63 || !EXACT_DOMAIN_LABEL_RE.test(label))) {
+			throw new InvalidPayloadError(`Invalid exact DOMAIN value: ${domain}`);
+		}
+		if (!seen.has(domain)) {
+			seen.add(domain);
+			result.push(domain);
+		}
+	}
+	return result;
 }
 
 // Rule identifiers are interpolated into rule-set download URLs (e.g. `${BASE}${site}.srs`).
@@ -40,7 +63,7 @@ export function getOutbounds(selectedRuleNames) {
 }
 
 // Helper function to generate rules based on selected rule names
-export function generateRules(selectedRules = [], customRules = []) {
+export function generateRules(selectedRules = [], customRules = [], personalRules = []) {
 	if (typeof selectedRules === 'string' && PREDEFINED_RULE_SETS[selectedRules]) {
 		selectedRules = PREDEFINED_RULE_SETS[selectedRules];
 	}
@@ -63,21 +86,22 @@ export function generateRules(selectedRules = [], customRules = []) {
 		}
 	});
 
-	customRules.reverse();
-	customRules.forEach((rule) => {
-		rules.unshift({
-			site_rules: sanitizeRuleIds(rule.site),
-			ip_rules: sanitizeRuleIds(rule.ip),
-			domain_suffix: toStringArray(rule.domain_suffix),
-			domain_keyword: toStringArray(rule.domain_keyword),
-			ip_cidr: toStringArray(rule.ip_cidr),
-			src_ip_cidr: toStringArray(rule.src_ip_cidr),
-			protocol: toStringArray(rule.protocol),
-			outbound: rule.name
-		});
+	const normalizeRule = (rule) => ({
+		site_rules: sanitizeRuleIds(rule.site),
+		ip_rules: sanitizeRuleIds(rule.ip),
+		domain: normalizeExactDomains(rule.domain),
+		domain_suffix: toStringArray(rule.domain_suffix),
+		domain_keyword: toStringArray(rule.domain_keyword),
+		ip_cidr: toStringArray(rule.ip_cidr),
+		src_ip_cidr: toStringArray(rule.src_ip_cidr),
+		protocol: toStringArray(rule.protocol),
+		outbound: rule.name
 	});
 
-	return rules;
+	const personal = Array.isArray(personalRules) ? personalRules.map(normalizeRule) : [];
+	const custom = Array.isArray(customRules) ? customRules.map(normalizeRule) : [];
+
+	return [...personal, ...custom, ...rules];
 }
 
 export function generateRuleSets(selectedRules = [], customRules = []) {

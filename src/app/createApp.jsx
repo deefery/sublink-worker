@@ -16,7 +16,7 @@ import { ShortLinkService } from '../services/shortLinkService.js';
 import { ConfigStorageService } from '../services/configStorageService.js';
 import { ServiceError, MissingDependencyError, InvalidPayloadError } from '../services/errors.js';
 import { normalizeRuntime } from '../runtime/runtimeConfig.js';
-import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateSubconverterConfig } from '../config/index.js';
+import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateSubconverterConfig, getPersonalRuleProfile } from '../config/index.js';
 
 const DEFAULT_USER_AGENT = 'curl/7.74.0';
 
@@ -77,6 +77,7 @@ export function createApp(bindings = {}) {
 
             const selectedRules = parseSelectedRules(c.req.query('selectedRules'));
             const customRules = parseJsonArray(c.req.query('customRules'));
+            const personalProfile = parsePersonalRuleProfile(c.req.query('personal_rules'));
             const ua = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
@@ -111,7 +112,9 @@ export function createApp(bindings = {}) {
                 externalController,
                 externalUiDownloadUrl,
                 singboxConfigVersion,
-                includeAutoSelect
+                includeAutoSelect,
+                personalProfile.rules,
+                personalProfile.outbounds
             );
             await builder.build();
             const userinfo = builder.getSubscriptionUserinfo();
@@ -134,6 +137,7 @@ export function createApp(bindings = {}) {
 
             const selectedRules = parseSelectedRules(c.req.query('selectedRules'));
             const customRules = parseJsonArray(c.req.query('customRules'));
+            const personalProfile = parsePersonalRuleProfile(c.req.query('personal_rules'));
             const ua = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
@@ -164,7 +168,9 @@ export function createApp(bindings = {}) {
                 externalUiDownloadUrl,
                 includeAutoSelect,
                 forcedProviderUrls,
-                forcedProviderUserAgent
+                forcedProviderUserAgent,
+                personalProfile.rules,
+                personalProfile.outbounds
             );
             await builder.build();
             const userinfo = builder.getSubscriptionUserinfo();
@@ -187,6 +193,7 @@ export function createApp(bindings = {}) {
 
             const selectedRules = parseSelectedRules(c.req.query('selectedRules'));
             const customRules = parseJsonArray(c.req.query('customRules'));
+            const personalProfile = parsePersonalRuleProfile(c.req.query('personal_rules'));
             const ua = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
@@ -207,7 +214,9 @@ export function createApp(bindings = {}) {
                 lang,
                 ua,
                 groupByCountry,
-                includeAutoSelect
+                includeAutoSelect,
+                personalProfile.rules,
+                personalProfile.outbounds
             );
             builder.setSubscriptionUrl(c.req.url);
             await builder.build();
@@ -247,11 +256,13 @@ export function createApp(bindings = {}) {
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const customRules = parseJsonArray(c.req.query('customRules'));
+            const personalProfile = parsePersonalRuleProfile(c.req.query('personal_rules'));
             const lang = c.get('lang');
 
             const config = generateSubconverterConfig({
                 selectedRules,
                 customRules,
+                personalRules: personalProfile.rules,
                 lang,
                 includeAutoSelect,
                 groupByCountry
@@ -266,6 +277,9 @@ export function createApp(bindings = {}) {
     });
 
     app.get('/xray', async (c) => {
+        if (c.req.query('personal_rules')) {
+            return c.text('Personal routing rules are not supported by the Xray Base64 node-list output', 400);
+        }
         const inputString = c.req.query('config');
         if (!inputString) {
             return c.text('Missing config parameter', 400);
@@ -448,6 +462,18 @@ function parseJsonArray(raw) {
 
 function parseBooleanFlag(value) {
     return value === 'true' || value === true;
+}
+
+function parsePersonalRuleProfile(raw) {
+    const profileId = typeof raw === 'string' ? raw.trim() : '';
+    if (!profileId) {
+        return { rules: [], outbounds: [] };
+    }
+    const profile = getPersonalRuleProfile(profileId);
+    if (!profile) {
+        throw new InvalidPayloadError(`Unknown personal rule profile: ${profileId}`);
+    }
+    return profile;
 }
 
 function parseHttpUrlArray(raw) {

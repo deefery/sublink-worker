@@ -1,6 +1,6 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
-import { PREDEFINED_RULE_SETS, UNIFIED_RULES } from '../config/index.js';
+import { PREDEFINED_RULE_SETS, UNIFIED_RULES, getPersonalRuleProfileOptions } from '../config/index.js';
 import { CustomRules } from './CustomRules.jsx';
 import { TextareaWithActions } from './TextareaWithActions.jsx';
 import { ValidatedTextarea } from './ValidatedTextarea.jsx';
@@ -15,6 +15,7 @@ const LINK_FIELDS = [
 
 export const Form = (props) => {
   const { t, lang } = props;
+  const personalRuleProfiles = getPersonalRuleProfileOptions();
 
   const translations = {
     processing: t('processing'),
@@ -168,6 +169,17 @@ export const Form = (props) => {
             </h3>
             
             <div class="space-y-4">
+              <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('personalRuleProfile')}</label>
+                <select x-model="personalRulesProfile" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                  <option value="">{t('personalRuleProfileOff')}</option>
+                  {personalRuleProfiles.map(profile => (
+                    <option value={profile.id}>{t('personalRuleProfileHome')} ({profile.ruleCount})</option>
+                  ))}
+                </select>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t('personalRuleProfileTip')}</p>
+              </div>
+
               <label class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
                 <span class="font-medium text-gray-700 dark:text-gray-300">{t('groupByCountry')}</span>
                 <div class="relative inline-flex items-center cursor-pointer">
