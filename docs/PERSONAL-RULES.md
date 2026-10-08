@@ -6,12 +6,15 @@ This project has an opt-in personal rule profile for the household subscriptions
 
 - Profile ID: `home`
 - Rule source: `src/config/personalRuleProfiles.js`
-- Current reviewed set: 60 exact `DOMAIN` entries
-  - 44 -> `Ad Block`
+- Current reviewed set: 122 exact `DOMAIN` entries
+  - 106 -> `Ad Block`
   - 4 -> `AI Services`
   - 12 -> `Non-China`
+- The original migrated 60-domain baseline remains unchanged; the 2026-10-08 review added 62 exact ad/telemetry domains after individual review.
 
 The list was migrated from the reviewed ShellCrash catchall rule files dated 2026-10-02 and 2026-10-03. Do not copy browser capture logs into this repository. Domains that were only observed but not approved remain unchanged.
+
+The 2026-10-08 follow-up review is documented in `docs/PERSONAL-RULES-REVIEW-2026-10-08.md`.
 
 These are exact host matches. Do not replace them with `DOMAIN-SUFFIX`, root-domain rules, IP CIDRs, DNS overrides, or shared IP rules merely to reduce the list.
 

@@ -1,4 +1,4 @@
-const HOME_AD_DOMAINS = [
+const HOME_AD_DOMAINS_BASELINE = [
     'adx-cfg-u1.ubixioe.com',
     'fcount-api.webapp.easebar.com',
     'adblock.telemetry.eyeo.com',
@@ -44,6 +44,76 @@ const HOME_AD_DOMAINS = [
     'www.dianomi.com',
     'z11.cnzz.com'
 ];
+
+const HOME_AD_DOMAINS_2026_10_08 = [
+    'ad.turn.com',
+    'api.btloader.com',
+    'api.id5-sync.com',
+    'api.intentiq.com',
+    'bh.contextweb.com',
+    'btloader.com',
+    'bttrack.com',
+    'c1.adform.net',
+    'cdn.1rtb.com',
+    'cdn.api.btloader.com',
+    'cdn.btloader.com',
+    'cdn.id5-sync.com',
+    'cdn.prod.uidapi.com',
+    'cm.adgrx.com',
+    'counter.yadro.ru',
+    'd-code.liadm.com',
+    'dis.criteo.com',
+    'eb2.3lift.com',
+    'eus.rubiconproject.com',
+    'feed.pghub.io',
+    'gum.criteo.com',
+    'i.liadm.com',
+    'i6.liadm.com',
+    'id.a-mx.com',
+    'id.rlcdn.com',
+    'id5-sync.com',
+    'idx.liadm.com',
+    'lb.eu-1-id5-sync.com',
+    'lbs.eu-1-id5-sync.com',
+    'lexicon.33across.com',
+    'log.snssdk.com',
+    'match.deepintent.com',
+    'match.prod.bidr.io',
+    'mpcfg.fancydsp.com',
+    'onetag-sys.com',
+    'opehs.tanx.com',
+    'pandg.tapad.com',
+    'pghub.io',
+    'pixel-sync.sitescout.com',
+    'pixel.rubiconproject.com',
+    'pixel.tapad.com',
+    'prebid-match.dotomi.com',
+    'prebid.scope3.com',
+    'rp.liadm.com',
+    's2s.t13.io',
+    'scripts.mediavine.com',
+    'scripts.pubnation.com',
+    'sdk-config.tanx.com',
+    'sdk.1rtb.net',
+    'sdkg.fancyapi.com',
+    'ssbsync-global.smartadserver.com',
+    'static.btloader.com',
+    'static.fancyapi.com',
+    'sync.intentiq.com',
+    'sync.ipredictive.com',
+    'sync.outbrain.com',
+    'sync.srv.stackadapt.com',
+    't2.fancyapi.com',
+    'token.rubiconproject.com',
+    'ucg.fancyapi.com',
+    'um.simpli.fi',
+    'x.bidswitch.net'
+];
+
+const HOME_AD_DOMAINS = Object.freeze([
+    ...HOME_AD_DOMAINS_BASELINE,
+    ...HOME_AD_DOMAINS_2026_10_08
+]);
 
 const HOME_AI_DOMAINS = [
     'registry.ollama.ai',
