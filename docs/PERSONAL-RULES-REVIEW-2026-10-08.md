@@ -112,3 +112,18 @@ HaGeZi list membership was treated as supporting evidence, not proof of maliciou
 - Approved 62-domain increment SHA256: `16b369265c0482935108e15144ada8e954b7725bddfe46b6d62085f8caf8e4dc`.
 - Full 122-domain set SHA256: `a374f3d6d4534d5d843465037725c95688e663c9da0ce5be82a18f2abdf111dd`.
 - Candidate-set comparison: missing=0, extra=0, held domains present=0.
+
+## Production deployment and live Clash validation
+
+- Deployed Worker version: `fe2f8f09-eb2e-43a2-a702-bb8d4a58c129`.
+- Previous production rollback version: `ed879ca1-4681-46d3-a1df-3171bec63e47`.
+- Production endpoint: `sub.zhijic.com`.
+- Live Clash request returned HTTP 200.
+- Live exact-domain count: 122; unique: 122.
+- Live policy split: 106 Ad Blocking + 4 AI Services + 12 Non-China.
+- Live original 60-domain baseline SHA256 remained `e4de46808885acf16ad01c7cc8d62575ffc51f62a92507f533feb75e150a87cb`.
+- Live 62-domain increment SHA256: `16b369265c0482935108e15144ada8e954b7725bddfe46b6d62085f8caf8e4dc`.
+- Live 122-domain full SHA256: `a374f3d6d4534d5d843465037725c95688e663c9da0ce5be82a18f2abdf111dd`.
+- All 62 approved domains were emitted to the ad-block policy; all five held domains were absent.
+- Exact personal rules were emitted before a test `DOMAIN-SUFFIX` custom rule; final `MATCH` remained last; all target proxy groups existed.
+- This validation used a repository test node only; no household subscription credential or router mutation was involved.
