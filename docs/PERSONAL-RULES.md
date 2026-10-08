@@ -6,10 +6,10 @@ This project has an opt-in personal rule profile for the household subscriptions
 
 - Profile ID: `home`
 - Rule source: `src/config/personalRuleProfiles.js`
-- Current reviewed set: 123 exact `DOMAIN` entries
+- Current reviewed set: 125 exact `DOMAIN` entries
   - 106 -> `Ad Block`
   - 4 -> `AI Services`
-  - 1 -> `China Services`
+  - 3 -> `China Services`
   - 12 -> `Non-China`
 - The original migrated 60-domain baseline remains unchanged; the 2026-10-08 review added 62 exact ad/telemetry domains after individual review.
 
@@ -166,3 +166,13 @@ From this migration onward, additions or removals for this reviewed household ex
 
 - `gameapi-soul.soofun.online` -> `China Services`
 - Exact `DOMAIN` only; no `DOMAIN-SUFFIX`, root-domain, DNS, node, or proxy-group changes.
+
+## China routing additions — 2026-10-08
+
+Exact `DOMAIN` entries routed to `China Services` include:
+
+- `gameapi-soul.soofun.online`
+- `ggls.sruner.com`
+- `mapidroid.aqicn.org`
+
+These are exact-domain rules only; no suffix expansion is used.

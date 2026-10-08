@@ -123,6 +123,8 @@ const HOME_AI_DOMAINS = [
 ];
 
 const HOME_CHINA_DOMAINS = [
+    'mapidroid.aqicn.org',
+    'ggls.sruner.com',
     'gameapi-soul.soofun.online'
 ];
 
