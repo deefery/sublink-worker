@@ -1,4 +1,4 @@
-# Personal exact-domain rules
+# Personal household routing rules
 
 This project has an opt-in personal rule profile for the household subscriptions served by `sub.zhijic.com`.
 
@@ -6,7 +6,7 @@ This project has an opt-in personal rule profile for the household subscriptions
 
 - Profile ID: `home`
 - Rule source: `src/config/personalRuleProfiles.js`
-- Current reviewed set: 125 exact `DOMAIN` entries
+- Current reviewed set: 125 exact `DOMAIN` entries plus 1 explicit `DOMAIN-SUFFIX` hard-direct rule
   - 106 -> `Ad Block`
   - 4 -> `AI Services`
   - 3 -> `China Services`
@@ -17,7 +17,7 @@ The list was migrated from the reviewed ShellCrash catchall rule files dated 202
 
 The 2026-10-08 follow-up review is documented in `docs/PERSONAL-RULES-REVIEW-2026-10-08.md`.
 
-These are exact host matches. Do not replace them with `DOMAIN-SUFFIX`, root-domain rules, IP CIDRs, DNS overrides, or shared IP rules merely to reduce the list.
+The reviewed migration/ad/AI/functional entries are exact host matches. Do not widen them merely to reduce the list. One deliberate exception exists: `zhijic.com` is explicitly maintained as `DOMAIN-SUFFIX,zhijic.com,DIRECT` so all household-owned subdomains bypass proxy selectors. This suffix rule was requested explicitly and is not inferred from the catchall review.
 
 ## How subscriptions opt in
 

@@ -128,6 +128,10 @@ const HOME_CHINA_DOMAINS = [
     'gameapi-soul.soofun.online'
 ];
 
+const HOME_DIRECT_SUFFIXES = [
+    'zhijic.com'
+];
+
 const HOME_FUNCTIONAL_DOMAINS = [
     'dns.twnic.tw',
     'api.revenuecat.com',
@@ -152,6 +156,7 @@ export const PERSONAL_RULE_PROFILES = Object.freeze({
             Object.freeze({ name: 'Ad Block', domain: Object.freeze(HOME_AD_DOMAINS) }),
             Object.freeze({ name: 'AI Services', domain: Object.freeze(HOME_AI_DOMAINS) }),
             Object.freeze({ name: 'China Services', domain: Object.freeze(HOME_CHINA_DOMAINS) }),
+            Object.freeze({ name: 'DIRECT', domain_suffix: Object.freeze(HOME_DIRECT_SUFFIXES) }),
             Object.freeze({ name: 'Non-China', domain: Object.freeze(HOME_FUNCTIONAL_DOMAINS) })
         ])
     })
@@ -160,7 +165,8 @@ export const PERSONAL_RULE_PROFILES = Object.freeze({
 function cloneRules(rules = []) {
     return rules.map(rule => ({
         ...rule,
-        domain: Array.isArray(rule.domain) ? [...rule.domain] : []
+        domain: Array.isArray(rule.domain) ? [...rule.domain] : [],
+        domain_suffix: Array.isArray(rule.domain_suffix) ? [...rule.domain_suffix] : []
     }));
 }
 
@@ -174,7 +180,7 @@ export function getPersonalRuleProfile(profileId, profiles = PERSONAL_RULE_PROFI
         label: profile.label,
         description: profile.description,
         rules,
-        outbounds: [...new Set(rules.map(rule => rule.name).filter(Boolean))]
+        outbounds: [...new Set(rules.map(rule => rule.name).filter(name => name && name !== 'DIRECT' && name !== 'REJECT'))]
     };
 }
 
@@ -183,6 +189,6 @@ export function getPersonalRuleProfileOptions() {
         id: profile.id,
         label: profile.label,
         description: profile.description,
-        ruleCount: profile.rules.reduce((sum, rule) => sum + (rule.domain?.length || 0), 0)
+        ruleCount: profile.rules.reduce((sum, rule) => sum + (rule.domain?.length || 0) + (rule.domain_suffix?.length || 0), 0)
     }));
 }

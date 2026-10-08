@@ -31,7 +31,7 @@ describe('personal exact-domain rule profiles', () => {
     it('contains exactly 125 unique reviewed domains with the expected policy split', () => {
         const profile = getPersonalRuleProfile('home');
         expect(profile).not.toBeNull();
-        const counts = Object.fromEntries(profile.rules.map(rule => [rule.name, rule.domain.length]));
+        const counts = Object.fromEntries(profile.rules.filter(rule => rule.domain.length > 0).map(rule => [rule.name, rule.domain.length]));
         expect(counts).toEqual({
             'Ad Block': 106,
             'AI Services': 4,
@@ -41,6 +41,8 @@ describe('personal exact-domain rule profiles', () => {
         const allDomains = profile.rules.flatMap(rule => rule.domain);
         expect(allDomains).toHaveLength(125);
         expect(profile.rules.find(rule => rule.name === 'China Services')?.domain).toEqual(['mapidroid.aqicn.org', 'ggls.sruner.com', 'gameapi-soul.soofun.online']);
+        expect(profile.rules.find(rule => rule.name === 'DIRECT')?.domain_suffix).toEqual(['zhijic.com']);
+        expect(profile.outbounds).not.toContain('DIRECT');
         expect(new Set(allDomains).size).toBe(125);
     });
 
@@ -103,6 +105,8 @@ describe('personal exact-domain rule profiles', () => {
         expect(domainRules).toHaveLength(125);
         const groupNames = new Set((config['proxy-groups'] || []).map(group => group.name));
         domainRules.forEach(rule => expect(groupNames.has(rule.split(',')[2])).toBe(true));
+        expect(config.rules).toContain('DOMAIN-SUFFIX,zhijic.com,DIRECT');
+        expect(groupNames.has('DIRECT')).toBe(false);
         expect(config.rules.at(-1)).toMatch(/^MATCH,/);
     });
 
@@ -148,6 +152,8 @@ describe('personal exact-domain rule profiles', () => {
         const outboundTags = new Set(config.outbounds.map(outbound => outbound.tag));
         const routedOutbounds = domainRules.map(rule => rule.outbound).filter(Boolean);
         routedOutbounds.forEach(outbound => expect(outboundTags.has(outbound)).toBe(true));
+        const hardDirectRule = config.route.rules.find(rule => Array.isArray(rule.domain_suffix) && rule.domain_suffix.includes('zhijic.com'));
+        expect(hardDirectRule?.outbound).toBe('DIRECT');
     });
 
     it('emits all 125 exact domains in Surge and keeps FINAL last', async () => {
@@ -158,6 +164,7 @@ describe('personal exact-domain rule profiles', () => {
         const ruleSection = text.split('[Rule]')[1]?.split('\n[')[0] || '';
         const lines = ruleSection.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
         expect(lines.filter(line => line.startsWith('DOMAIN,')).length).toBe(125);
+        expect(lines).toContain('DOMAIN-SUFFIX,zhijic.com,DIRECT');
         expect(lines.at(-1)).toMatch(/^FINAL,/);
     });
 
@@ -167,6 +174,8 @@ describe('personal exact-domain rule profiles', () => {
         expect(response.status).toBe(200);
         const text = await response.text();
         expect(text.split(/\r?\n/).filter(line => line.includes('[]DOMAIN,')).length).toBe(125);
+        expect(text).toContain('ruleset=DIRECT,[]DOMAIN-SUFFIX,zhijic.com');
+        expect(text).not.toContain('custom_proxy_group=DIRECT`');
     });
 
     it('keeps legacy Xray output working and explicitly rejects personal routing profiles there', async () => {

@@ -166,6 +166,7 @@ export function generateSubconverterConfig({ selectedRules = [], customRules = [
 
 	rules.forEach(rule => {
 		const groupName = t(`outboundNames.${rule.outbound}`);
+		if (groupName === 'DIRECT' || groupName === 'REJECT') return;
 		if (processedGroups.has(groupName)) return;
 		processedGroups.add(groupName);
 
