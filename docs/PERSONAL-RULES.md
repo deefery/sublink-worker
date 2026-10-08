@@ -9,7 +9,7 @@ This project has an opt-in personal rule profile for the household subscriptions
 - Current reviewed set: 125 exact `DOMAIN` entries plus 1 explicit `DOMAIN-SUFFIX` hard-direct rule
   - 106 -> `Ad Block`
   - 4 -> `AI Services`
-  - 3 -> `China Services`
+  - 3 -> `Location:CN` (localized as `🔒 国内服务` in zh-CN)
   - 12 -> `Non-China`
 - The original migrated 60-domain baseline remains unchanged; the 2026-10-08 review added 62 exact ad/telemetry domains after individual review.
 
@@ -164,12 +164,12 @@ From this migration onward, additions or removals for this reviewed household ex
 
 ## Exact China routing addition — 2026-10-08
 
-- `gameapi-soul.soofun.online` -> `China Services`
+- `gameapi-soul.soofun.online` -> `Location:CN` / `🔒 国内服务`
 - Exact `DOMAIN` only; no `DOMAIN-SUFFIX`, root-domain, DNS, node, or proxy-group changes.
 
 ## China routing additions — 2026-10-08
 
-Exact `DOMAIN` entries routed to `China Services` include:
+Exact `DOMAIN` entries routed to the existing `Location:CN` / `🔒 国内服务` group include:
 
 - `gameapi-soul.soofun.online`
 - `ggls.sruner.com`

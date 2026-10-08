@@ -155,7 +155,7 @@ export const PERSONAL_RULE_PROFILES = Object.freeze({
         rules: Object.freeze([
             Object.freeze({ name: 'Ad Block', domain: Object.freeze(HOME_AD_DOMAINS) }),
             Object.freeze({ name: 'AI Services', domain: Object.freeze(HOME_AI_DOMAINS) }),
-            Object.freeze({ name: 'China Services', domain: Object.freeze(HOME_CHINA_DOMAINS) }),
+            Object.freeze({ name: 'Location:CN', domain: Object.freeze(HOME_CHINA_DOMAINS) }),
             Object.freeze({ name: 'DIRECT', domain_suffix: Object.freeze(HOME_DIRECT_SUFFIXES) }),
             Object.freeze({ name: 'Non-China', domain: Object.freeze(HOME_FUNCTIONAL_DOMAINS) })
         ])

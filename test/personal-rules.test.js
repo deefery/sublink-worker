@@ -35,12 +35,12 @@ describe('personal exact-domain rule profiles', () => {
         expect(counts).toEqual({
             'Ad Block': 106,
             'AI Services': 4,
-            'China Services': 3,
+            'Location:CN': 3,
             'Non-China': 12
         });
         const allDomains = profile.rules.flatMap(rule => rule.domain);
         expect(allDomains).toHaveLength(125);
-        expect(profile.rules.find(rule => rule.name === 'China Services')?.domain).toEqual(['mapidroid.aqicn.org', 'ggls.sruner.com', 'gameapi-soul.soofun.online']);
+        expect(profile.rules.find(rule => rule.name === 'Location:CN')?.domain).toEqual(['mapidroid.aqicn.org', 'ggls.sruner.com', 'gameapi-soul.soofun.online']);
         expect(profile.rules.find(rule => rule.name === 'DIRECT')?.domain_suffix).toEqual(['zhijic.com']);
         expect(profile.outbounds).not.toContain('DIRECT');
         expect(new Set(allDomains).size).toBe(125);
