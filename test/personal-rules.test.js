@@ -28,18 +28,20 @@ function profileUrl(path) {
 }
 
 describe('personal exact-domain rule profiles', () => {
-    it('contains exactly 122 unique reviewed domains with the expected policy split', () => {
+    it('contains exactly 123 unique reviewed domains with the expected policy split', () => {
         const profile = getPersonalRuleProfile('home');
         expect(profile).not.toBeNull();
         const counts = Object.fromEntries(profile.rules.map(rule => [rule.name, rule.domain.length]));
         expect(counts).toEqual({
             'Ad Block': 106,
             'AI Services': 4,
+            'China Services': 1,
             'Non-China': 12
         });
         const allDomains = profile.rules.flatMap(rule => rule.domain);
-        expect(allDomains).toHaveLength(122);
-        expect(new Set(allDomains).size).toBe(122);
+        expect(allDomains).toHaveLength(123);
+        expect(profile.rules.find(rule => rule.name === 'China Services')?.domain).toEqual(['gameapi-soul.soofun.online']);
+        expect(new Set(allDomains).size).toBe(123);
     });
 
     it('preserves the original migrated 60-domain baseline and policies', () => {
@@ -92,13 +94,13 @@ describe('personal exact-domain rule profiles', () => {
         expect(PERSONAL_RULE_PROFILES.home.id).toBe('home');
     });
 
-    it('emits all 122 exact domains in Clash and references real policy groups', async () => {
+    it('emits all 123 exact domains in Clash and references real policy groups', async () => {
         const app = createTestApp();
         const response = await app.request(profileUrl('clash'));
         expect(response.status).toBe(200);
         const config = yaml.load(await response.text());
         const domainRules = config.rules.filter(rule => rule.startsWith('DOMAIN,'));
-        expect(domainRules).toHaveLength(122);
+        expect(domainRules).toHaveLength(123);
         const groupNames = new Set((config['proxy-groups'] || []).map(group => group.name));
         domainRules.forEach(rule => expect(groupNames.has(rule.split(',')[2])).toBe(true));
         expect(config.rules.at(-1)).toMatch(/^MATCH,/);
@@ -110,8 +112,8 @@ describe('personal exact-domain rule profiles', () => {
             const response = await app.request(profileUrl('clash'));
             const config = yaml.load(await response.text());
             const domainRules = config.rules.filter(rule => rule.startsWith('DOMAIN,'));
-            expect(domainRules).toHaveLength(122);
-            expect(new Set(domainRules).size).toBe(122);
+            expect(domainRules).toHaveLength(123);
+            expect(new Set(domainRules).size).toBe(123);
         }
     });
 
@@ -131,16 +133,16 @@ describe('personal exact-domain rule profiles', () => {
         expect(redirect.status).toBe(302);
         const resolved = await app.request(redirect.headers.get('location'));
         const config = yaml.load(await resolved.text());
-        expect(config.rules.filter(rule => rule.startsWith('DOMAIN,')).length).toBe(122);
+        expect(config.rules.filter(rule => rule.startsWith('DOMAIN,')).length).toBe(123);
     });
 
-    it('emits all 122 exact domains in Sing-box with reject and existing outbound semantics', async () => {
+    it('emits all 123 exact domains in Sing-box with reject and existing outbound semantics', async () => {
         const app = createTestApp();
         const response = await app.request(profileUrl('singbox'));
         expect(response.status).toBe(200);
         const config = await response.json();
         const domainRules = config.route.rules.filter(rule => Array.isArray(rule.domain));
-        expect(domainRules.reduce((sum, rule) => sum + rule.domain.length, 0)).toBe(122);
+        expect(domainRules.reduce((sum, rule) => sum + rule.domain.length, 0)).toBe(123);
         const adRule = domainRules.find(rule => rule.domain.includes('adx-cfg-u1.ubixioe.com'));
         expect(adRule.action).toBe('reject');
         const outboundTags = new Set(config.outbounds.map(outbound => outbound.tag));
@@ -148,23 +150,23 @@ describe('personal exact-domain rule profiles', () => {
         routedOutbounds.forEach(outbound => expect(outboundTags.has(outbound)).toBe(true));
     });
 
-    it('emits all 122 exact domains in Surge and keeps FINAL last', async () => {
+    it('emits all 123 exact domains in Surge and keeps FINAL last', async () => {
         const app = createTestApp();
         const response = await app.request(profileUrl('surge'));
         expect(response.status).toBe(200);
         const text = await response.text();
         const ruleSection = text.split('[Rule]')[1]?.split('\n[')[0] || '';
         const lines = ruleSection.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-        expect(lines.filter(line => line.startsWith('DOMAIN,')).length).toBe(122);
+        expect(lines.filter(line => line.startsWith('DOMAIN,')).length).toBe(123);
         expect(lines.at(-1)).toMatch(/^FINAL,/);
     });
 
-    it('emits all 122 exact domains for subconverter', async () => {
+    it('emits all 123 exact domains for subconverter', async () => {
         const app = createTestApp();
         const response = await app.request('http://localhost/subconverter?selectedRules=minimal&personal_rules=home&lang=en-US');
         expect(response.status).toBe(200);
         const text = await response.text();
-        expect(text.split(/\r?\n/).filter(line => line.includes('[]DOMAIN,')).length).toBe(122);
+        expect(text.split(/\r?\n/).filter(line => line.includes('[]DOMAIN,')).length).toBe(123);
     });
 
     it('keeps legacy Xray output working and explicitly rejects personal routing profiles there', async () => {

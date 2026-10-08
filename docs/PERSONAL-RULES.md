@@ -6,9 +6,10 @@ This project has an opt-in personal rule profile for the household subscriptions
 
 - Profile ID: `home`
 - Rule source: `src/config/personalRuleProfiles.js`
-- Current reviewed set: 122 exact `DOMAIN` entries
+- Current reviewed set: 123 exact `DOMAIN` entries
   - 106 -> `Ad Block`
   - 4 -> `AI Services`
+  - 1 -> `China Services`
   - 12 -> `Non-China`
 - The original migrated 60-domain baseline remains unchanged; the 2026-10-08 review added 62 exact ad/telemetry domains after individual review.
 
@@ -160,3 +161,8 @@ The rollback launcher is self-contained and restores the saved `ShellCrash.cfg` 
 ### Ongoing maintenance model
 
 From this migration onward, additions or removals for this reviewed household exact-domain set should be made only in `src/config/personalRuleProfiles.js`, followed by the normal test and deploy flow above. The router should refresh the existing subscription; it should not receive another duplicate local copy of these 60 rules.
+
+## Exact China routing addition — 2026-10-08
+
+- `gameapi-soul.soofun.online` -> `China Services`
+- Exact `DOMAIN` only; no `DOMAIN-SUFFIX`, root-domain, DNS, node, or proxy-group changes.

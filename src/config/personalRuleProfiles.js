@@ -122,6 +122,10 @@ const HOME_AI_DOMAINS = [
     'yunwu.ai'
 ];
 
+const HOME_CHINA_DOMAINS = [
+    'gameapi-soul.soofun.online'
+];
+
 const HOME_FUNCTIONAL_DOMAINS = [
     'dns.twnic.tw',
     'api.revenuecat.com',
@@ -145,6 +149,7 @@ export const PERSONAL_RULE_PROFILES = Object.freeze({
         rules: Object.freeze([
             Object.freeze({ name: 'Ad Block', domain: Object.freeze(HOME_AD_DOMAINS) }),
             Object.freeze({ name: 'AI Services', domain: Object.freeze(HOME_AI_DOMAINS) }),
+            Object.freeze({ name: 'China Services', domain: Object.freeze(HOME_CHINA_DOMAINS) }),
             Object.freeze({ name: 'Non-China', domain: Object.freeze(HOME_FUNCTIONAL_DOMAINS) })
         ])
     })
